@@ -20,3 +20,15 @@ assert.equal(schemas[3].find(f=>f.key==='sales').when({hasBusiness:'Não'}),fals
 assert.equal(schemas[3].find(f=>f.key==='sales').when({hasBusiness:'Sim'}),true);
 assert.equal(new Set(schemas.flat().map(f=>f.key)).size,schemas.flat().length);
 console.log('PASS: CPF, WhatsApp, máscaras, limites, datas, e-mail, URL e condições.');
+// Obrigatoriedade proporcional à inscrição, com validação dos opcionais preenchidos.
+for (const f of schemas.flat()) {
+ assert.ok(f.placeholder, `Placeholder ausente: ${f.key}`);
+ if (f.optional) assert.equal(fieldError(f, f.type === 'multi' ? [] : ''), '', f.key);
+ else assert.ok(fieldError(f, ''), f.key);
+}
+assert.equal(fieldError(schemas[4].find(f=>f.key==='interests'), []), '');
+assert.ok(fieldError(schemas[4].find(f=>f.key==='interests'), ['Área inventada']));
+assert.equal(validBirth('29/02/2000',new Date(2026,9,21)),true);
+assert.equal(validBirth('29/02/2001',new Date(2026,9,21)),false);
+assert.equal(normalize('birth', '29022000'), '29/02/2000');
+console.log('PASS: placeholders completos, campos essenciais/opcionais e nascimento brasileiro.');

@@ -1,6 +1,6 @@
-# EJN Business School — versão 0.2
+# EJN Business School — versão 0.3
 
-Formulário em sete etapas com identidade da Escola Jovens de Negócios, perguntas consolidadas das inscrições Business School e EJN 25+, áudio e anexos. Os quatro links foram acessados em 21/10/2026. Leia `docs/analise-e-direcao.md` e `docs/inventario-perguntas.md`.
+Formulário em sete etapas com identidade da Escola Jovens de Negócios, perguntas consolidadas das inscrições Business School e EJN 25+, ditado em tempo real e anexos. Os quatro links foram acessados em 21/10/2026. Leia `docs/analise-e-direcao.md` e `docs/inventario-perguntas.md`.
 
 ## Executar
 
@@ -14,7 +14,9 @@ Na pasta do projeto, execute `npm run dev` e abra http://localhost:5173. Não é
 - Perguntas reais das duas fontes, consolidadas sem duplicar a formação EJN 25+.
 - Perguntas condicionais para negócio existente ou ideia futura.
 - WhatsApp brasileiro com DDD e 11 dígitos; CPF opcional com dígitos verificadores; máscaras e limites ao digitar, colar e substituir uma seleção; CEP, data, e-mail, UF e URL.
-- Texto ou áudio para desafio e objetivo; até 3 anexos de 10 MB por resposta; gravação até 2 minutos. Downloads individuais e JSON de respostas/metadados.
+- Placeholders em todos os campos de entrada; exemplos de preenchimento, dicas para seleções e indicação de campos opcionais.
+- Ditado em português e anexos em todos os campos de texto, incluindo nome, e-mail e telefone. A fala aparece progressivamente no próprio campo; o texto pode ser corrigido após encerrar o ditado. Não cria gravações.
+- Até 3 anexos de 10 MB por campo; downloads individuais e JSON de respostas/metadados. Anexos não substituem os textos obrigatórios.
 - Logo oficial, fontes Poppins locais, verde escuro, amarelo, fundo claro e cartões arredondados.
 - Entrada em sequência, saída e entrada entre etapas, profundidade na abertura, luz ambiente e movimento sutil que acompanha o ponteiro. Sem capturar a rolagem e com suporte a movimento reduzido.
 - Respostas em memória: nenhuma gravação em localStorage, cookie ou analytics.
@@ -30,9 +32,26 @@ Validação de CPF não consulta Receita Federal. E-mail e celular são validado
 ## Arquivos
 
 - `form-model.js`: inventário, condições e funções de validação.
-- `app.js`: navegação, estado, anexos, gravação e exportação.
+- `app.js`: navegação, estado, anexos e exportação.
+- `speech-input.js`: integração com reconhecimento de voz do navegador.
 - `style.css`: estilos e movimento.
 - `index.html`: estrutura e privacidade.
 - `.github/workflows/pages.yml`: pacote estático completo para GitHub Pages, incluindo assets e modelo.
 
-A publicação no repositório não foi executada nesta entrega. O workflow requer habilitar GitHub Pages para GitHub Actions nas configurações do repositório.
+## Campos obrigatórios e opcionais
+
+Obrigatórios: nome completo, e-mail, WhatsApp, cidade, UF, situação profissional, estágio empreendedor, existência de negócio/projeto, nome do negócio quando aplicável, objetivo principal, disponibilidade e compromisso. São os dados essenciais para identificar, contatar e encaminhar a pessoa na formação. A confirmação de revisão também é necessária na demonstração.
+
+Opcionais: nascimento, CPF, endereço completo, escolaridade, profissão, informações complementares do negócio, desafios, expectativas adicionais, interesses, origem do contato, pagamento, acessibilidade e dúvidas. Complementam a conversa sem bloquear o contato inicial. Se preenchidos, CPF, CEP, data e perfil continuam sendo validados.
+
+## Ditado e privacidade
+
+Usa `SpeechRecognition`/`webkitSpeechRecognition`, em português (`pt-BR`), com resultados intermediários. Depende de HTTPS/localhost, suporte do navegador, autorização do microfone e disponibilidade do serviço. O provedor do navegador pode processar o áudio online. Não há chave nem backend de transcrição próprio. O formulário não gera arquivos de gravação. O ditado encerra após até dois minutos ou quando o serviço encerra a sessão; pode ser iniciado novamente.
+
+Em caso de navegador incompatível, conexão indisponível ou permissão negada, a interface explica o problema e permite digitar. Nenhum desses casos produz uma transcrição fictícia. Os testes de integração simulam os eventos Web Speech; não comprovam a qualidade do reconhecimento de voz em dispositivos reais.
+
+## Publicação em homologação
+
+O workflow desta versão executa **somente em `homolog`**, tanto no push como na execução manual. Não faz push, merge ou deploy da `main`. Inclui `form-model.js`, `speech-input.js` e os assets no pacote publicado.
+
+GitHub Pages precisa estar habilitado para GitHub Actions. O job fornece a URL quando a publicação terminar. Um repositório tem um site Pages: a branch de origem não cria um segundo site isolado de produção. Esta versão não configura domínio ou hospedagem separados.

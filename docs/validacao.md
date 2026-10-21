@@ -1,11 +1,17 @@
-# Validação da entrega — 21/10/2026
+# Validação da revisão em homolog — 21/10/2026
 
-`npm run check`: passou. Sintaxe de app.js/form-model.js e regras de CPF, celular/DDD, máscaras, truncamento de caracteres, datas válidas e inválidas, e-mail, URL, nome e condições dos campos.
+`npm run check`: passou. Sintaxe dos três módulos; validação de nome, e-mail, CPF, celular/DDD, máscaras, limites, datas válidas/inválidas (incluindo DD/MM/AAAA), URL e condições. Verifica placeholders e obrigatoriedade/opcionalidade no inventário completo.
 
-`npm run test:browser`: passou com Chromium 145 em 1440×960 e 390×960. Testou fluxo completo de sete etapas, bloqueio de campos vazios, máscara por colagem com letras, rejeição de CPF inválido, persistência de CPF formatado, endereço, seleções, negócio existente e troca para sem negócio (remoção dos dados ocultos), áudio com microfone simulado, PDF, rejeição de executável, múltipla escolha, revisão, retorno/edição, exportação JSON e limpeza de respostas. Não houve erro JavaScript capturado nas duas larguras, nem transbordamento horizontal na abertura/conclusão.
+`npm run test:browser`: passou em Chromium, nas larguras 1440 e 390. Fluxo completo de sete etapas com:
 
-Movimento reduzido: passou; animação da esfera desativada quando a preferência é reduce.
+- Placeholder, ditado e anexo em todos os campos de texto visíveis, incluindo condicionais; opções iniciais nas seleções.
+- Campos essenciais bloqueiam avanço; complementares vazios permitem avanço; CPF opcional inválido bloqueia até correção/limpeza.
+- Ditado em pt-BR: hipóteses intermediárias, atualização final sem duplicação, inserção na seleção, edição posterior, e-mail falado e máscara de telefone.
+- Permissão negada, serviço sem rede e navegador sem Web Speech mantêm a digitação disponível. Texto parcial é preservado em falha de rede.
+- Anexos em nome/objetivo; anexo não substitui resposta obrigatória; executável é rejeitado. Anexos condicionais são descartados ao ocultar o campo.
+- Revisão com anexos associados ao campo, edição, exportação JSON com texto transcrito e metadados, limpeza de dados. Ditado não cria arquivo de áudio.
+- Identidade visual carregada, ausência de erros JavaScript e transbordamento horizontal nas etapas, movimento reduzido respeitado.
 
-As capturas `previews/ejn-1440.png` e `previews/ejn-390.png` foram feitas após carregar fontes e concluir a animação de entrada. A revisão longa também foi inspecionada por captura durante os testes.
+A integração de reconhecimento usa eventos Web Speech simulados nos testes. Não se testou voz real, precisão do serviço externo ou hardware Android/iOS/Safari. Reconhecimento real requer navegador compatível, permissão, contexto seguro e serviço disponível. Nenhum backend de inscrição foi conectado.
 
-Limites: não testado em hardware Android/iOS real ou Safari; a gravação usa microfone simulado. Nenhum formulário público foi enviado. Nenhum backend foi conectado ou publicação executada. Verificações são locais; não comprovam cadastro/posse de CPF, CEP, e-mail ou conta WhatsApp.
+O workflow foi limitado à branch `homolog` e o pacote estático inclui todos os módulos e assets. Validação local e push não comprovam execução remota do GitHub Actions.

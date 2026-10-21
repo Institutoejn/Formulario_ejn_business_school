@@ -1,8 +1,8 @@
-name: Publicar no GitHub Pages
+name: Publicar homologação no GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [homolog]
   workflow_dispatch:
 
 permissions:
@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/homolog'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -24,11 +25,12 @@ jobs:
       - name: Obter código
         uses: actions/checkout@v4
       - name: Validar JavaScript
-        run: node --check app.js
+        run: npm run check
       - name: Preparar arquivos públicos
         run: |
           mkdir -p _site
-          cp index.html style.css app.js favicon.svg _site/
+          cp index.html style.css app.js form-model.js speech-input.js favicon.svg _site/
+          cp -R assets _site/
       - name: Configurar Pages
         uses: actions/configure-pages@v5
       - name: Enviar arquivos estáticos

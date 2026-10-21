@@ -1,16 +1,14 @@
-import { schemas, validCPF, validPhone, validBirth, normalize, fieldError } from './form-model.js';
+import { schemas, normalize, fieldError } from './form-model.js';
+import { createDictation } from './speech-input.js';
 const app = document.querySelector('#app');
 const labels = ['Sobre você', 'Onde você mora', 'Seu momento', 'Seu negócio', 'Seus objetivos', 'Seu compromisso', 'Revisão'];
 const titles = ['O começo é<br>com <em>você.</em>', 'De onde vem<br>sua <em>história?</em>', 'Seu momento.<br>Seu <em>potencial.</em>', 'Uma ideia.<br>Muitas <em>possibilidades.</em>', 'O que você quer<br><em>construir?</em>', 'Vamos dar o<br>próximo <em>passo.</em>', 'Sua jornada,<br>por <em>inteiro.</em>'];
 const descriptions = ['Vamos começar pelos seus dados de contato.', 'Queremos saber de onde você vai participar.', 'Sua experiência ajuda a conhecer seu ponto de partida.', 'Conte sobre seu projeto ou a ideia que você quer tirar do papel.', 'Aqui, sua experiência encontra novos caminhos.', 'Conte sobre sua disponibilidade e o apoio que precisa.', 'Confira suas respostas. Você pode editar qualquer etapa.'];
 const values = {};
-const files = { context: [], goals: [] };
+const textFields = schemas.flat().filter(f => !f.options);
+const files = Object.fromEntries(textFields.map(f => [f.key, []]));
 let step = -1;
 let transitioning = false;
-let recorder = null;
-let recordingKey = null;
-let recordingTimer;
-let pendingMicrophone = false;
 let sound = false;
 let audioContext;
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -48,27 +46,23 @@ function hero() {
   document.querySelector('#begin').onclick = () => navigate(0);
 }
 
-function input(key, label, type = 'text', placeholder = '', extra = '') {
-  return `<div class="field"><label for="${key}">${label} <span aria-hidden="true">*</span></label><input id="${key}" name="${key}" type="${type}" value="${escape(values[key])}" placeholder="${placeholder}" required ${extra}><p class="error" id="${key}-error"></p></div>`;
-}
-function select(key, label, options) {
-  return `<div class="field"><label for="${key}">${label} *</label><select id="${key}" name="${key}" required><option value="">Selecione uma opção</option>${options.map(o => `<option ${values[key] === o ? 'selected' : ''}>${escape(o)}</option>`).join('')}</select><p class="error" id="${key}-error"></p></div>`;
-}
-function composer(key, label) {
-  return `<div class="field wide"><label for="${key}">${label} *</label><p class="field-help" id="${key}-help">Escreva ou grave um áudio de até 2 minutos. Imagens e arquivos são opcionais.</p><div class="composer"><textarea name="${key}" id="${key}" maxlength="2000" placeholder="Este espaço é seu. Conte com suas palavras…" aria-describedby="${key}-help ${key}-error">${escape(values[key])}</textarea><div class="composer-tools"><div><button type="button" class="tool-button" data-record="${key}">◉ Gravar áudio</button><button type="button" class="tool-button" data-attach="${key}">＋ Anexar</button><input class="hidden" type="file" id="${key}-upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf,audio/mpeg,audio/wav,audio/webm,audio/ogg,audio/mp4"></div><span class="char-count" id="${key}-count">${(values[key] || '').length}/2000</span></div></div><p class="field-help">Até 3 anexos por resposta · JPG, PNG, WebP, PDF ou áudio · 10 MB por arquivo.</p><div class="attachments" id="${key}-files"></div><p class="error" id="${key}-error" role="status"></p></div>`;
-}
 function visibleFields(index = step) {
   return (schemas[index] || []).filter(f => !f.when || f.when(values));
 }
+function requirement(f) {
+  return f.optional ? '<span class="optional">(opcional)</span>' : '<span class="required-marker" aria-label="obrigatório">*</span>';
+}
 function schemaField(f) {
-  if (f.type === 'composer') return composer(f.key, f.label);
-  if (f.type === 'multi') return `<fieldset class="field wide"><legend>${escape(f.label)} *</legend><div class="choices">${f.options.map(v => `<label class="check-option"><input type="checkbox" name="${f.key}" value="${escape(v)}" ${(values[f.key] || []).includes(v) ? 'checked' : ''}>${escape(v)}</label>`).join('')}</div><p class="error" id="${f.key}-error"></p></fieldset>`;
-  let markup;
-  if (f.options) markup = select(f.key, f.label, f.options);
-  else if (f.type === 'textarea') markup = `<div class="field wide"><label for="${f.key}">${escape(f.label)} ${f.optional ? '<span class="optional">(opcional)</span>' : '*'}</label><textarea id="${f.key}" name="${f.key}" maxlength="2000" ${f.optional ? '' : 'required'} aria-describedby="${f.key}-error">${escape(values[f.key])}</textarea><p class="error" id="${f.key}-error"></p></div>`;
-  else markup = input(f.key, f.label, f.type || 'text', f.placeholder || '', `maxlength="${f.max || 120}" ${f.attrs || ''} aria-describedby="${f.key}-error"`);
-  if (f.optional) markup = markup.replace(' required', '').replace(' <span aria-hidden="true">*</span>', ' <span class="optional">(opcional)</span>').replace(`${f.label} *`, `${f.label} (opcional)`);
-  return markup;
+  const label = `${escape(f.label)} ${requirement(f)}`;
+  if (f.type === 'multi') return `<fieldset class="field wide"><legend>${label}</legend><p class="field-help">${escape(f.placeholder)}</p><div class="choices">${f.options.map(v => `<label class="check-option"><input type="checkbox" name="${f.key}" value="${escape(v)}" ${(values[f.key] || []).includes(v) ? 'checked' : ''}>${escape(v)}</label>`).join('')}</div><p class="error" id="${f.key}-error"></p></fieldset>`;
+  const required = f.optional ? '' : 'required';
+  const described = `aria-describedby="${f.key}-error ${f.key}-status"`;
+  if (f.options) return `<div class="field"><label for="${f.key}">${label}</label><select id="${f.key}" name="${f.key}" ${required} aria-describedby="${f.key}-error"><option value="">${escape(f.placeholder)}</option>${f.options.map(o => `<option ${values[f.key] === o ? 'selected' : ''}>${escape(o)}</option>`).join('')}</select><p class="error" id="${f.key}-error"></p></div>`;
+  const multiline = f.type === 'textarea' || f.type === 'composer';
+  const control = multiline
+    ? `<textarea id="${f.key}" name="${f.key}" maxlength="2000" placeholder="${escape(f.placeholder)}" ${required} ${described}>${escape(values[f.key])}</textarea>`
+    : `<input id="${f.key}" name="${f.key}" type="${f.type || 'text'}" value="${escape(values[f.key])}" placeholder="${escape(f.placeholder)}" maxlength="${f.max || 120}" ${f.attrs || ''} ${required} ${described}>`;
+  return `<div class="field ${multiline ? 'wide' : ''}"><label for="${f.key}">${label}</label><div class="composer">${control}<div class="composer-tools"><div><button type="button" class="tool-button" data-dictate="${f.key}" aria-controls="${f.key}" aria-pressed="false" aria-label="Ditar ${escape(f.label)}">◉ Ditar texto</button><button type="button" class="tool-button" data-attach="${f.key}" aria-label="Anexar a ${escape(f.label)}">＋ Anexar</button><input class="hidden" type="file" id="${f.key}-upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf,audio/mpeg,audio/wav,audio/webm,audio/ogg,audio/mp4"></div>${multiline ? `<span class="char-count" id="${f.key}-count">${(values[f.key] || '').length}/2000</span>` : ''}</div></div><p class="speech-status field-help" id="${f.key}-status" role="status"></p><div class="attachments" id="${f.key}-files"></div><p class="error" id="${f.key}-error" role="status"></p></div>`;
 }
 function fields() { return visibleFields().map(schemaField).join(''); }
 function bindInputs() {
@@ -93,13 +87,14 @@ function bindInputs() {
       }
     });
     el.addEventListener('blur', () => {
-      if (el.value) {
+      if (el.value || el.getAttribute('aria-invalid') === 'true') {
         const message = fieldError(f, el.value);
         document.getElementById(`${f.key}-error`).textContent = message;
         el.setAttribute('aria-invalid', String(Boolean(message)));
       }
     });
     if (f.key === 'hasBusiness') el.addEventListener('change', () => {
+      if (dictation.active) return;
       collect(); render(); document.getElementById('hasBusiness')?.focus();
     });
   });
@@ -107,24 +102,19 @@ function bindInputs() {
 
 function render() {
   if (step === -1) return hero();
-  app.innerHTML = `<section class="step-layout"><aside class="sidebar reveal"><div class="step-count">SUA JORNADA / 0${step + 1}</div><h2 tabindex="-1" id="step-title">${titles[step]}</h2><p>${descriptions[step]}</p><ol class="steps">${labels.map((label, i) => `<li class="${i === step ? 'active' : i < step ? 'done' : ''}" ${i === step ? 'aria-current="step"' : ''}>${label}</li>`).join('')}</ol></aside><div class="form-area reveal"><div class="form-top"><span>${step === 6 ? 'QUASE LÁ. ESSE É O SEU RETRATO.' : 'PRAZER EM CONHECER SUA HISTÓRIA.'}</span><span>0${step + 1} / 07</span></div><div class="progress" role="progressbar" aria-label="Etapas da jornada" aria-valuemin="0" aria-valuemax="7" aria-valuenow="${step + 1}"><div style="width:${(step + 1) / 7 * 100}%"></div></div><form novalidate><div class="${step === 6 ? '' : 'fields'}">${step === 6 ? review() : fields()}</div><div class="form-actions"><button class="back" type="button" id="back"><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg> ${step === 0 ? 'Início' : 'Voltar'}</button><button class="button" type="submit">${step === 6 ? 'Preparar minha cópia' : 'Continuar'} <span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></button></div><p class="reassurance">${step === 6 ? 'Protótipo: nenhuma inscrição será enviada.' : 'Suas respostas ficam nesta aba. Campos com * são obrigatórios.'}</p></form></div></section>`;
+  app.innerHTML = `<section class="step-layout"><aside class="sidebar reveal"><div class="step-count">SUA JORNADA / 0${step + 1}</div><h2 tabindex="-1" id="step-title">${titles[step]}</h2><p>${descriptions[step]}</p><ol class="steps">${labels.map((label, i) => `<li class="${i === step ? 'active' : i < step ? 'done' : ''}" ${i === step ? 'aria-current="step"' : ''}>${label}</li>`).join('')}</ol></aside><div class="form-area reveal"><div class="form-top"><span>${step === 6 ? 'QUASE LÁ. ESSE É O SEU RETRATO.' : 'PRAZER EM CONHECER SUA HISTÓRIA.'}</span><span>0${step + 1} / 07</span></div><div class="progress" role="progressbar" aria-label="Etapas da jornada" aria-valuemin="0" aria-valuemax="7" aria-valuenow="${step + 1}"><div style="width:${(step + 1) / 7 * 100}%"></div></div><form novalidate>${step < 6 ? `<p class="input-help field-help">Digite ou use o ditado para ver sua fala virar texto. Revise antes de continuar. O ditado depende do navegador e pode usar seu serviço de reconhecimento online.</p><p class="input-help field-help">Anexos opcionais: até 3 por campo, com 10 MB cada. Imagens, PDF e áudio. Anexos não substituem respostas obrigatórias.</p>` : ''}<div class="${step === 6 ? '' : 'fields'}">${step === 6 ? review() : fields()}</div><div class="form-actions"><button class="back" type="button" id="back"><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M20 12H4m7-7-7 7 7 7"/></svg> ${step === 0 ? 'Início' : 'Voltar'}</button><button class="button" type="submit">${step === 6 ? 'Preparar minha cópia' : 'Continuar'} <span aria-hidden="true"><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></button></div><p class="reassurance">${step === 6 ? 'Protótipo: nenhuma inscrição será enviada.' : 'Suas respostas ficam nesta aba. Campos com * são obrigatórios.'}</p></form></div></section>`;
   bindInputs();
   document.querySelector('#back').onclick = () => navigate(step - 1);
   app.querySelector('form').onsubmit = event => {
     event.preventDefault();
-    if (recorder || pendingMicrophone) { announce('Finalize a gravação antes de continuar.'); return; }
+    if (dictation.active) { announce('Encerre o ditado antes de continuar.'); return; }
     collect();
     if (!validate()) return;
     tone();
     if (step === 6) finish(); else navigate(step + 1);
   };
-  app.querySelectorAll('[data-choice]').forEach(button => button.onclick = () => {
-    values.experience = button.dataset.choice;
-    app.querySelectorAll('[data-choice]').forEach(b => b.setAttribute('aria-pressed', b === button));
-    document.querySelector('#experience-error').textContent = '';
-  });
   app.querySelectorAll('[data-edit]').forEach(button => button.onclick = () => navigate(Number(button.dataset.edit)));
-  for (const key of ['context', 'goals']) {
+  for (const { key } of textFields) {
     if (!document.getElementById(`${key}-files`)) continue;
     renderFiles(key);
     if (!document.getElementById(key)) continue;
@@ -135,15 +125,22 @@ function render() {
         if (files[key].length >= 3) { errors.push('Limite de 3 anexos por resposta.'); break; }
         if (file.size > 10 * 1024 * 1024) { errors.push(`${file.name}: o limite é 10 MB.`); continue; }
         if (!/^(image\/(jpeg|png|webp)|application\/pdf|audio\/(mpeg|wav|x-wav|webm|ogg|mp4))$/.test(file.type)) { errors.push(`${file.name}: formato não suportado.`); continue; }
-        files[key].push({file, url: URL.createObjectURL(file), recorded: false});
+        files[key].push({file, url: URL.createObjectURL(file)});
       }
       event.target.value = '';
       document.getElementById(`${key}-error`).textContent = errors.join(' ');
       renderFiles(key);
     };
-    document.querySelector(`[data-record="${key}"]`).onclick = () => toggleRecording(key);
+    document.querySelector(`[data-dictate="${key}"]`).onclick = () => {
+      const input = document.getElementById(key);
+      document.getElementById(`${key}-status`).textContent = '';
+      delete document.getElementById(`${key}-status`).dataset.error;
+      if (dictation.active) dictation.stop();
+      else dictation.start(textFields.find(f => f.key === key), input);
+    };
     document.getElementById(key).oninput = event => {
-      document.getElementById(`${key}-count`).textContent = `${event.target.value.length}/2000`;
+      const count = document.getElementById(`${key}-count`);
+      if (count) count.textContent = `${event.target.value.length}/2000`;
     };
   }
 }
@@ -153,14 +150,19 @@ function collect() {
   visibleFields().filter(f => f.type === 'multi').forEach(f => {
     values[f.key] = [...app.querySelectorAll(`input[name="${f.key}"]:checked`)].map(el => el.value);
   });
-  if (values.hasBusiness === 'Sim') delete values.desiredArea;
-  if (values.hasBusiness === 'Não') for (const key of ['businessName','sales','businessUrl','businessDescription']) delete values[key];
+  const hidden = textFields.filter(f => f.when && !f.when(values));
+  for (const { key } of hidden) {
+    delete values[key];
+    files[key].forEach(item => URL.revokeObjectURL(item.url));
+    files[key].length = 0;
+  }
+  if (values.hasBusiness === 'Não') delete values.sales;
 }
 
 function error(key, message) {
   document.getElementById(`${key}-error`).textContent = message;
   const input = document.getElementById(key);
-  if (input) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', `${key}-error`); }
+  if (input) { input.setAttribute('aria-invalid', 'true'); input.setAttribute('aria-describedby', `${key}-error${files[key] ? ` ${key}-status` : ''}`); }
 }
 function validate() {
   let valid = true;
@@ -168,7 +170,6 @@ function validate() {
   app.querySelectorAll('.error').forEach(el => { el.textContent = ''; });
   visibleFields().forEach(f => {
     let message = fieldError(f, values[f.key]);
-    if (f.type === 'composer' && files[f.key].some(item => item.recorded || item.file.type.startsWith('audio/'))) message = '';
     if (message) { error(f.key, message); valid = false; }
   });
   if (step === 6 && !document.querySelector('#confirm').checked) { document.querySelector('#confirm-error').textContent = 'Confirme a revisão para preparar sua cópia.'; valid = false; }
@@ -185,64 +186,31 @@ function renderFiles(key) {
   });
 }
 
-async function toggleRecording(key) {
-  if (recorder) { if (recorder.state === 'recording') recorder.stop(); return; }
-  if (pendingMicrophone) return;
-  const message = document.getElementById(`${key}-error`);
-  message.textContent = '';
-  if (files[key].length >= 3) { message.textContent = 'Remova um anexo antes de gravar. O limite é 3.'; return; }
-  if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { message.textContent = 'Gravação indisponível neste navegador. Você pode escrever ou anexar um áudio. O microfone exige HTTPS ou acesso local.'; return; }
-  pendingMicrophone = true;
-  const button = document.querySelector(`[data-record="${key}"]`);
-  button.textContent = 'Aguardando microfone…';
-  setNavigationDisabled(true);
-  let stream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({audio: true});
-    const mimeType = ['audio/webm;codecs=opus', 'audio/mp4', 'audio/ogg;codecs=opus'].find(type => MediaRecorder.isTypeSupported(type));
-    recorder = mimeType ? new MediaRecorder(stream, {mimeType}) : new MediaRecorder(stream);
-    recordingKey = key;
-    const chunks = [];
-    let totalSize = 0;
-    let tooLarge = false;
-    recorder.ondataavailable = event => {
-      if (event.data.size) { chunks.push(event.data); totalSize += event.data.size; }
-      if (totalSize > 10 * 1024 * 1024 && recorder?.state === 'recording') { tooLarge = true; recorder.stop(); }
-    };
-    recorder.onstop = () => {
-      clearInterval(recordingTimer); stream.getTracks().forEach(track => track.stop());
-      const type = chunks[0]?.type || mimeType || 'audio/webm';
-      const blob = new Blob(chunks, {type});
-      if (!tooLarge && blob.size && blob.size <= 10 * 1024 * 1024) {
-        const extension = type.includes('mp4') ? 'm4a' : type.includes('ogg') ? 'ogg' : 'webm';
-        const file = new File([blob], `resposta-${key}-${files[key].length + 1}.${extension}`, {type});
-        files[key].push({file, url: URL.createObjectURL(file), recorded: true}); renderFiles(key);
-        announce('Áudio gravado. Você pode ouvir ou remover antes de continuar.');
-      } else { message.textContent = 'Não foi possível salvar este áudio. Tente novamente ou escreva sua resposta.'; }
-      recorder = null; recordingKey = null;
-      button.textContent = '◉ Gravar áudio'; button.classList.remove('recording');
-      setNavigationDisabled(false);
-    };
-    recorder.start(1000);
-    let elapsed = 0;
-    button.textContent = '■ Parar · 0:00'; button.classList.add('recording');
-    announce('Gravação iniciada. Pressione Parar quando terminar.');
-    recordingTimer = setInterval(() => {
-      elapsed++;
-      button.textContent = `■ Parar · ${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
-      if (elapsed >= 120 && recorder?.state === 'recording') recorder.stop();
-    }, 1000);
-  } catch {
-    stream?.getTracks().forEach(track => track.stop()); recorder = null; recordingKey = null;
-    message.textContent = 'Não foi possível acessar o microfone. Confira a permissão do navegador ou escreva sua resposta.';
-    button.textContent = '◉ Gravar áudio'; setNavigationDisabled(false);
-  } finally { pendingMicrophone = false; }
-}
-function setNavigationDisabled(disabled) {
-  app.querySelectorAll('.form-actions button,[data-attach]').forEach(button => { button.disabled = disabled; });
-}
+const dictation = createDictation({
+  onState(key, active, status = '') {
+    app.querySelectorAll('.form-actions button, select, [data-attach], [data-edit]').forEach(button => { button.disabled = active; });
+    app.querySelectorAll('[data-dictate]').forEach(button => {
+      const current = button.dataset.dictate === key;
+      button.disabled = active && !current;
+      button.setAttribute('aria-pressed', String(active && current));
+      button.classList.toggle('recording', active && current);
+      if (current) {
+        button.textContent = active ? '■ Encerrar ditado' : '◉ Ditar texto';
+        button.setAttribute('aria-label', `${active ? 'Encerrar ditado de' : 'Ditar'} ${textFields.find(f => f.key === key).label}`);
+      }
+    });
+    const message = document.getElementById(`${key}-status`);
+    if (message && (active || !message.dataset.error)) message.textContent = status || 'Ditado encerrado. Revise o texto; você pode corrigi-lo antes de continuar.';
+    announce(active ? status : 'Ditado encerrado. Revise o texto transcrito.');
+  },
+  onError(key, message) {
+    const status = document.getElementById(`${key}-status`);
+    if (status) { status.textContent = message; status.dataset.error = 'true'; }
+    announce(message);
+  }
+});
 async function navigate(next) {
-  if (recorder || pendingMicrophone) return;
+  if (dictation.active) return;
   if (transitioning) return;
   transitioning = true;
   collect();
@@ -256,8 +224,7 @@ async function navigate(next) {
 }
 
 function review() {
-  const groups = schemas.map((_, i) => visibleFields(i).map(f => [f.label, f.key]));
-  return groups.map((group, i) => `<section class="review-section"><div class="review-heading"><h3>0${i + 1} · ${labels[i]}</h3><button type="button" data-edit="${i}">Editar <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></div><dl>${group.map(([label, key]) => `<div><dt>${label}</dt><dd>${escape((Array.isArray(values[key]) ? values[key].join(', ') : values[key]) || (files[key]?.length ? 'Resposta em áudio / anexos abaixo' : '—'))}</dd></div>`).join('')}</dl>${i === 3 || i === 4 ? `<div class="attachments" id="${i === 3 ? 'context' : 'goals'}-files" style="margin-top:15px"></div>` : ''}</section>`).join('') + `<div class="notice">Esta experiência é uma demonstração. O envio para a equipe EJN ainda não está conectado. Você pode baixar suas respostas e cada anexo para guardar uma cópia.</div><div class="check-row"><input id="confirm" type="checkbox"><label for="confirm">Revisei minhas respostas e entendo que esta cópia não realiza uma inscrição.</label></div><p class="error" id="confirm-error" role="status"></p>`;
+  return schemas.map((_, i) => `<section class="review-section"><div class="review-heading"><h3>0${i + 1} · ${labels[i]}</h3><button type="button" data-edit="${i}">Editar ↗</button></div><dl>${visibleFields(i).map(f => `<div><dt>${escape(f.label)}</dt><dd>${escape((Array.isArray(values[f.key]) ? values[f.key].join(', ') : values[f.key]) || 'Não informado')}${files[f.key] ? `<div class="attachments" id="${f.key}-files" style="margin-top:10px"></div>` : ''}</dd></div>`).join('')}</dl></section>`).join('') + `<div class="notice">Esta experiência é uma demonstração. O envio para a equipe EJN ainda não está conectado. Você pode baixar suas respostas e cada anexo para guardar uma cópia.</div><div class="check-row"><input id="confirm" type="checkbox"><label for="confirm">Revisei minhas respostas e entendo que esta cópia não realiza uma inscrição.</label></div><p class="error" id="confirm-error" role="status"></p>`;
 }
 
 function downloadJSON() {
@@ -279,7 +246,7 @@ function finish() {
   window.scrollTo({top:0, behavior:'instant'});
 }
 window.addEventListener('beforeunload', () => {
-  if (recorder?.state === 'recording') recorder.stop();
+  dictation.stop();
   Object.values(files).flat().forEach(item => URL.revokeObjectURL(item.url));
 });
 hero();
