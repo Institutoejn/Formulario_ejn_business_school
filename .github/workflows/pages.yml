@@ -30,7 +30,13 @@ jobs:
           test -s app.js
           test -s form-model.js
           test -s speech-input.js
-          test -s favicon.svg
+          test -s assets/favicon-ejn-32.png
+          test -s assets/favicon-ejn-192.png
+          test -s assets/emblema-ejn.png
+          test -s assets/apple-touch-icon-ejn.png
+          test -s assets/Reaktif-Medium.woff2
+          test -s assets/Reaktif-ExtraBold.woff2
+          test -s assets/StretchPro.woff2
           test -s assets/logo-ejn.webp
           test -s assets/Poppins-Regular.woff2
           test -s assets/Poppins-Bold.woff2
@@ -53,7 +59,7 @@ jobs:
       - name: Preparar arquivos públicos
         run: |
           mkdir -p _site
-          cp index.html style.css app.js form-model.js speech-input.js favicon.svg _site/
+          cp index.html style.css app.js form-model.js speech-input.js _site/
           cp -R assets _site/
       # Habilitar em Settings > Pages > Source: GitHub Actions.
       # enablement: true não é uma solução com GITHUB_TOKEN: exige token administrativo.

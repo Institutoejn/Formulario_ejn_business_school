@@ -17,7 +17,7 @@ Na pasta do projeto, execute `npm run dev` e abra http://localhost:5173. Não é
 - Placeholders em todos os campos de entrada; exemplos de preenchimento, dicas para seleções e indicação de campos opcionais.
 - Ditado em português e anexos em todos os campos de texto, incluindo nome, e-mail e telefone. A fala aparece progressivamente no próprio campo; o texto pode ser corrigido após encerrar o ditado. Não cria gravações.
 - Até 3 anexos de 10 MB por campo; downloads individuais e JSON de respostas/metadados. Anexos não substituem os textos obrigatórios.
-- Logo oficial, fontes Poppins locais, verde escuro, amarelo, fundo claro e cartões arredondados.
+- Logo e emblema oficiais, favicon institucional em 32/192 px e ícone Apple. Fontes locais Reaktif/StretchPro, Poppins como fallback, verde #013E35 e amarelo #FAAE00, conforme o site institucional.
 - Entrada em sequência, saída e entrada entre etapas, profundidade na abertura, luz ambiente e movimento sutil que acompanha o ponteiro. Sem capturar a rolagem e com suporte a movimento reduzido.
 - Respostas em memória: nenhuma gravação em localStorage, cookie ou analytics.
 
