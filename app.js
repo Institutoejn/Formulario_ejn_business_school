@@ -62,7 +62,7 @@ function schemaField(f) {
   const control = multiline
     ? `<textarea id="${f.key}" name="${f.key}" maxlength="2000" placeholder="${escape(f.placeholder)}" ${required} ${described}>${escape(values[f.key])}</textarea>`
     : `<input id="${f.key}" name="${f.key}" type="${f.type || 'text'}" value="${escape(values[f.key])}" placeholder="${escape(f.placeholder)}" maxlength="${f.max || 120}" ${f.attrs || ''} ${required} ${described}>`;
-  return `<div class="field ${multiline ? 'wide' : ''}"><label for="${f.key}">${label}</label><div class="composer">${control}<div class="composer-tools"><div><button type="button" class="tool-button" data-dictate="${f.key}" aria-controls="${f.key}" aria-pressed="false" aria-label="Ditar ${escape(f.label)}">◉ Ditar texto</button><button type="button" class="tool-button" data-attach="${f.key}" aria-label="Anexar a ${escape(f.label)}">＋ Anexar</button><input class="hidden" type="file" id="${f.key}-upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf,audio/mpeg,audio/wav,audio/webm,audio/ogg,audio/mp4"></div>${multiline ? `<span class="char-count" id="${f.key}-count">${(values[f.key] || '').length}/2000</span>` : ''}</div></div><p class="speech-status field-help" id="${f.key}-status" role="status"></p><div class="attachments" id="${f.key}-files"></div><p class="error" id="${f.key}-error" role="status"></p></div>`;
+  return `<div class="field ${multiline ? 'wide' : ''}"><label for="${f.key}">${label}</label><div class="composer">${control}<div class="composer-tools"><div><button type="button" class="tool-button dictation-button" data-dictate="${f.key}" aria-controls="${f.key}" aria-pressed="false" aria-label="Ditar ${escape(f.label)}" title="Ditar ${escape(f.label)}"><svg class="microphone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v3M9 22h6"/></svg></button><button type="button" class="tool-button" data-attach="${f.key}" aria-label="Anexar a ${escape(f.label)}">＋ Anexar</button><input class="hidden" type="file" id="${f.key}-upload" multiple accept="image/jpeg,image/png,image/webp,application/pdf,audio/mpeg,audio/wav,audio/webm,audio/ogg,audio/mp4"></div>${multiline ? `<span class="char-count" id="${f.key}-count">${(values[f.key] || '').length}/2000</span>` : ''}</div></div><p class="speech-status field-help" id="${f.key}-status" role="status"></p><div class="attachments" id="${f.key}-files"></div><p class="error" id="${f.key}-error" role="status"></p></div>`;
 }
 function fields() { return visibleFields().map(schemaField).join(''); }
 function bindInputs() {
@@ -195,8 +195,9 @@ const dictation = createDictation({
       button.setAttribute('aria-pressed', String(active && current));
       button.classList.toggle('recording', active && current);
       if (current) {
-        button.textContent = active ? '■ Encerrar ditado' : '◉ Ditar texto';
-        button.setAttribute('aria-label', `${active ? 'Encerrar ditado de' : 'Ditar'} ${textFields.find(f => f.key === key).label}`);
+        const label = `${active ? 'Encerrar ditado de' : 'Ditar'} ${textFields.find(f => f.key === key).label}`;
+        button.setAttribute('aria-label', label);
+        button.title = label;
       }
     });
     const message = document.getElementById(`${key}-status`);
