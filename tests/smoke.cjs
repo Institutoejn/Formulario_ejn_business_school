@@ -50,6 +50,8 @@ function speechMock() {
           assert(await input.getAttribute('placeholder'), `${key}: placeholder`);
           assert.equal(await page.locator(`[data-dictate="${key}"]`).count(), 1, key);
           assert.equal(await page.locator(`[data-attach="${key}"]`).count(), 1, key);
+          assert.equal(await page.locator(`[data-dictate="${key}"] .microphone-icon`).count(), 1, `${key}: ícone de microfone`);
+          assert.equal(await page.locator(`[data-attach="${key}"] .attachment-icon`).count(), 1, `${key}: ícone de anexo`);
         }
         for (const select of await page.locator('select').all()) assert.equal(await select.locator('option').first().textContent(), 'Selecione uma opção');
         assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
