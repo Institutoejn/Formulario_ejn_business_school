@@ -14,4 +14,11 @@
 
 A integração de reconhecimento usa eventos Web Speech simulados nos testes. Não se testou voz real, precisão do serviço externo ou hardware Android/iOS/Safari. Reconhecimento real requer navegador compatível, permissão, contexto seguro e serviço disponível. Nenhum backend de inscrição foi conectado.
 
-O workflow foi limitado à branch `homolog` e o pacote estático inclui todos os módulos e assets. Validação local e push não comprovam execução remota do GitHub Actions.
+## Correção da publicação
+
+A execução remota 39621341274 falhou em `actions/configure-pages@v5` com `Get Pages site failed / Not Found`. A anotação pública informa que o repositório precisa ter Pages habilitado com GitHub Actions. Não era uma falha do formulário.
+
+Após autorização do usuário, o workflow passou a validar `homolog` e pull requests sem deploy. Somente `main` publica, após a validação. O pacote estático inclui todos os módulos e assets. Pages ainda exige habilitação administrativa nas configurações; salvar código ou concluir testes locais não ativa esse recurso.
+
+Fonte do diagnóstico: https://github.com/Institutoejn/Formulario_ejn_business_school/actions/runs/39621341274
+Documentação da ação: https://github.com/actions/configure-pages/blob/v5/action.yml — `enablement` exige um token diferente de `GITHUB_TOKEN`, com permissões administrativas.

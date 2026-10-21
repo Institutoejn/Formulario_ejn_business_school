@@ -1,36 +1,62 @@
-name: Publicar homologação no GitHub Pages
+name: Validar e publicar GitHub Pages
 
 on:
   push:
-    branches: [homolog]
+    branches: [main, homolog]
+  pull_request:
+    branches: [main, homolog]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: github-pages
+  group: pages-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    if: github.ref == 'refs/heads/homolog'
+  validate:
+    name: Validar formulário
     runs-on: ubuntu-latest
+    steps:
+      - name: Obter código
+        uses: actions/checkout@v4
+      - name: Validar JavaScript e regras dos campos
+        run: npm run check
+      - name: Conferir arquivos públicos
+        run: |
+          test -s index.html
+          test -s style.css
+          test -s app.js
+          test -s form-model.js
+          test -s speech-input.js
+          test -s favicon.svg
+          test -s assets/logo-ejn.webp
+          test -s assets/Poppins-Regular.woff2
+          test -s assets/Poppins-Bold.woff2
+
+  deploy:
+    name: Publicar site
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Obter código
         uses: actions/checkout@v4
-      - name: Validar JavaScript
-        run: npm run check
       - name: Preparar arquivos públicos
         run: |
           mkdir -p _site
           cp index.html style.css app.js form-model.js speech-input.js favicon.svg _site/
           cp -R assets _site/
+      # Habilitar em Settings > Pages > Source: GitHub Actions.
+      # enablement: true não é uma solução com GITHUB_TOKEN: exige token administrativo.
       - name: Configurar Pages
         uses: actions/configure-pages@v5
       - name: Enviar arquivos estáticos

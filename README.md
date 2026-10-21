@@ -50,8 +50,14 @@ Usa `SpeechRecognition`/`webkitSpeechRecognition`, em português (`pt-BR`), com 
 
 Em caso de navegador incompatível, conexão indisponível ou permissão negada, a interface explica o problema e permite digitar. Nenhum desses casos produz uma transcrição fictícia. Os testes de integração simulam os eventos Web Speech; não comprovam a qualidade do reconhecimento de voz em dispositivos reais.
 
-## Publicação em homologação
+## Publicação
 
-O workflow desta versão executa **somente em `homolog`**, tanto no push como na execução manual. Não faz push, merge ou deploy da `main`. Inclui `form-model.js`, `speech-input.js` e os assets no pacote publicado.
+- Push em `homolog`: valida JavaScript, regras e arquivos públicos, sem deploy.
+- Pull requests para `main` ou `homolog`: somente validação.
+- Push ou execução manual em `main`: validação seguida de publicação no GitHub Pages.
 
-GitHub Pages precisa estar habilitado para GitHub Actions. O job fornece a URL quando a publicação terminar. Um repositório tem um site Pages: a branch de origem não cria um segundo site isolado de produção. Esta versão não configura domínio ou hospedagem separados.
+O pacote inclui `form-model.js`, `speech-input.js`, fontes e logo. Nenhum segredo ou dependência de instalação é necessário para os jobs de validação.
+
+**Pré-requisito administrativo:** no repositório, abrir **Settings → Pages → Build and deployment → Source → GitHub Actions** e salvar. Sem isso, `actions/configure-pages` retorna `Get Pages site failed / Not Found`. O `GITHUB_TOKEN` padrão do workflow não pode habilitar Pages automaticamente; não se adicionou token administrativo ao código.
+
+Depois de habilitar, executar novamente o workflow **Validar e publicar GitHub Pages** na branch `main`, ou usar **Re-run all jobs** na execução que falhou. A URL confirmada aparece na etapa de publicação. A branch `homolog` não publica nem altera o site Pages.
