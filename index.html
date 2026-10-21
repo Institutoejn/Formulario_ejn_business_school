@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3f0e8">
+  <meta name="description" content="Uma nova jornada de formação. Conheça o protótipo da experiência EJN Business School.">
+  <title>EJN Business School · Sua próxima versão</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header class="header"><a href="./" class="brand" aria-label="EJN Business School, início"><span class="brand-mark">ejn<span><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></span><span class="brand-name">BUSINESS<br>SCHOOL</span></a><span class="header-tag">FORMAÇÃO PARA IR ALÉM</span><button id="sound" class="quiet-button" aria-pressed="false">Som <span>desligado</span> <span aria-hidden="true">♪</span></button></header>
+  <main id="app"></main>
+  <footer class="footer"><span>ESCOLA JOVENS DE NEGÓCIOS</span><span>Protótipo · conteúdo e identidade em validação</span><button id="privacy" class="text-button">Seus dados, suas escolhas <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></button></footer>
+  <dialog id="privacy-dialog"><button class="dialog-close" aria-label="Fechar">×</button><p class="eyebrow">PRIVACIDADE</p><h2>Você tem o controle.</h2><p>Este é um protótipo. Suas respostas, gravações e anexos ficam apenas na memória desta aba. Nada é enviado para a EJN e nada é salvo automaticamente.</p><p>Ao recarregar ou fechar a página, os dados são descartados. Na revisão, você pode baixar uma cópia. O som é opcional e o microfone só é ativado quando você solicita uma gravação.</p><button class="button" id="privacy-ok">Entendi <span><svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 19 19 5M5 5h14v14"/></svg></span></button></dialog>
+  <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
