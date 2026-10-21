@@ -1,48 +1,43 @@
-# EJN Business School — análise e direção
+# Análise dos links e do código — 21/10/2026
 
-## Situação das fontes
+## Fontes consultadas
 
-As quatro URLs indicadas foram consultadas em 21/10/2026. Todas retornaram `Tunnel connection failed: 403 Forbidden` pelo proxy do ambiente. Uma nova consulta ao formulário Business School, após salvar os domínios no rascunho de configuração, continuou bloqueada. O conector Sites indicado pelo usuário não estava disponível nas ferramentas desta sessão.
-
-| Fonte | Objetivo da análise | Resultado |
+| Link | O que foi observado | Aplicação e diferença |
 | --- | --- | --- |
-| https://escolajovensdenegocios.com/formacoes/ | Oferta de formações, posicionamento e identidade | Acesso bloqueado; não analisada |
-| https://escolajovensdenegocios.com/inscricaobusinessschool/ | Perguntas, opções, textos e condições de cada etapa | Acesso bloqueado; não analisada |
-| https://escolajovensdenegocios.com/inscricaoejn25/ | Perguntas e particularidades a consolidar | Acesso bloqueado; não analisada |
-| https://www.gustavozinatto.com.br/ | Referência de imersão, composição e movimento | Acesso bloqueado; não analisada |
+| https://escolajovensdenegocios.com/formacoes/ | Catálogo institucional ainda com três jornadas: jovens, EJN 25+ e Business School. Verde, amarelo, branco, grade de fundo, títulos fortes, cartões arredondados e detalhes gráficos. | O novo formulário apresenta somente Business School e mantém um link para a formação de jovens. O catálogo externo não foi editado. |
+| https://escolajovensdenegocios.com/inscricaobusinessschool/ | Formulário completo com identificação, endereço, escolaridade, profissão, estágio empreendedor, negócio, candidatura e compromisso. A página anuncia 6 meses, 144h, público 18–30 e encontros segundas, quartas e sextas 19h–21h. | Principal base das perguntas. Condições não aplicadas automaticamente ao programa unificado. |
+| https://escolajovensdenegocios.com/inscricaoejn25/ | Formulário completo com negócio/projeto, área desejada, objetivos, áreas de desenvolvimento, motivação, disponibilidade, pagamento, descoberta, acessibilidade e dúvidas. Anuncia 3 meses, 12 encontros, terças 19h–21h, público 25+, 3x R$66,90 ou R$180 à vista. | Conteúdo incorporado sob Business School, com duração e preços antigos removidos das perguntas. |
+| https://www.gustavozinatto.com.br/ | Página atual com luzes sobre fundo escuro, camadas de profundidade, textos segmentados, cartões, seções de processo, acordeões e formulário de contato. Foram observadas duas imagens de fundo com animação `hero-current-drift`. | Referência de atmosfera e movimento, traduzida para as cores EJN. O briefing antigo mencionado pelo usuário não foi encontrado nem reproduzido. |
 
-Não houve avanço pelos formulários originais. Nenhuma pergunta deste protótipo deve ser atribuída aos sites. Fontes, cores, ícones, favicon e marca oficial permanecem pendentes de levantamento. A marca tipográfica, o favicon de seta, a paleta e os textos implementados são propostas, não ativos oficiais extraídos.
+A pesquisa web recuperou o catálogo, mas não recuperou os outros três links. Os quatro foram abertos no navegador; os formulários completos, opções e atributos dos controles foram inspecionados sem enviar candidaturas. Nenhuma inscrição real foi criada. Não foram preenchidos dados fictícios nos formulários públicos para evitar envio implícito em serviços de terceiros.
 
-## Decisões confirmadas pelo briefing
+## Identidade
 
-- Unificar Business School e EJN 25+ em EJN Business School.
-- Preservar separadamente a formação de jovens; esse formulário não altera sua oferta.
-- Criar uma experiência de tela ampla, com pequenas etapas e movimento.
-- Permitir texto, áudio, imagens e arquivos, sem exigir uso do microfone.
-- Usar a identidade da EJN após sua verificação; a referência Gustavo serve para imersão.
+Cores observadas na página: verde dos rótulos `#004D40`, verde institucional próximo de `#013E35`, amarelo/laranja `#FFA500`. A implementação usa verde `#004D40`, fundo claro e amarelo `#FFB800` para o destaque. Poppins foi confirmada nos estilos dos rótulos e títulos; os arquivos Regular e Bold foram obtidos do próprio domínio. O título publicitário das páginas tem tratamento gráfico próprio; não foi afirmado que todos os títulos originais usam Poppins.
 
-## Inventário proposto, ainda não validado contra as fontes
+Logo oficial: https://escolajovensdenegocios.com/wp-content/webp-express/webp-images/uploads/2024/03/logo-escola-jovens-de-negocios.png.webp
 
-| Etapa | Campos propostos |
-| --- | --- |
-| Sobre você | Nome completo, e-mail, WhatsApp, cidade/UF |
-| Seu momento | Momento profissional, área de atuação, experiência e desafio atual |
-| Seu próximo passo | Transformação desejada, interesse de desenvolvimento, origem do contato |
-| Revisão | Resumo editável e confirmação de que se trata de uma demonstração |
+Fontes: https://escolajovensdenegocios.com/visual/2024/03/Poppins-Regular.woff2 e https://escolajovensdenegocios.com/visual/2024/03/Poppins-Bold.woff2
 
-Desafio e transformação aceitam texto ou áudio. Cada resposta admite até três anexos de até 10 MB cada. A gravação é limitada a dois minutos e pode ser ouvida, baixada e removida. Os tipos permitidos são JPG, PNG, WebP, PDF, MP3, WAV, WebM, Ogg e M4A/MP4, conforme o MIME informado pelo navegador.
+Esses arquivos acompanham o pacote para evitar dependência de carregamento externo. O favicon com as letras EJN é um recurso de navegação criado para este pacote, não uma nova versão da logo.
 
-## Direção implementada
+## Revisão do código original
 
-Fundo claro, texto escuro, destaque alaranjado e títulos com contraste tipográfico. Uma esfera em CSS e linhas orbitais dão profundidade à abertura sem vídeo pesado. Transições acompanham as etapas, com respeito a `prefers-reduced-motion`. O som de passagem é sintetizado no navegador e começa desligado. A interface inclui navegação por teclado, foco ao mudar de etapa, mensagens de validação e progresso acessível.
+Foram lidos `index.html`, `app.js`, `style.css`, `favicon.svg`, `package.json`, README, documentação, teste e workflow de publicação. O código original tinha quatro etapas, dados genéricos, marca tipográfica improvisada, paleta bege e laranja e nenhuma pergunta de CPF/endereço/escolaridade. A validação aceitava telefones de 10 a 15 dígitos sem regra de celular brasileiro. A gravação, limites de anexos, escape de HTML e descarte em memória foram preservados. A revisão, exportação, progresso e navegação foram ajustados para sete etapas.
 
-## Pendências para produção
+O workflow foi corrigido para publicar também `form-model.js` e `assets/`. Os testes antigos, específicos das perguntas provisórias, foram substituídos pelos testes do novo inventário.
 
-1. Aplicar a liberação dos domínios nas configurações do ambiente e repetir a coleta de todas as etapas, sem enviar inscrições. Alternativamente, disponibilizar exportações ou capturas de cada etapa dos formulários e dos ativos visuais oficiais.
-2. Consolidar o inventário real: pergunta, texto de apoio, tipo, opções, obrigatoriedade, condições e diferenças entre as duas formações. Validar faixas etárias, disponibilidade, preços e qualquer regra com a equipe, sem inferi-los.
-3. Substituir a direção visual provisória pelos ativos e tokens oficiais verificados.
-4. Definir o destino das inscrições e a política de privacidade. A aplicação atual não envia dados, não armazena rascunhos nem realiza uma inscrição.
-5. Implementar o backend com validação, armazenamento privado de anexos, limites, controle de acesso e tratamento de falhas. A validação atual é apenas do protótipo no navegador.
-6. Publicar via HTTPS para permitir o microfone em dispositivos reais. Testar Safari/iOS e Android com hardware real; a validação automatizada usa Chromium.
+## Critérios de consolidação
 
-Áudios e anexos ficam somente em memória. O JSON exportado inclui respostas e metadados dos anexos, não os arquivos. Os anexos podem ser baixados individualmente. Recarregar a página descarta os dados.
+O nome público é EJN Business School. O formulário do EJN 25+ contribui com perguntas, sem manter um terceiro programa. A jornada de jovens não foi reconstruída porque o pedido e os dois formulários fornecidos se referem à consolidação Business School/25+.
+
+Perguntas equivalentes foram unificadas e sua origem consta do inventário. Dados conflitantes de agenda, idade, preço e duração não foram apresentados como condição definitiva. A pergunta de pagamento oferece preferência à vista/parcelado, sem cobrar ou informar valores. Acessibilidade e dúvidas são opcionais; nas páginas de origem há campos de acessibilidade obrigatórios. CPF foi adicionado opcionalmente por solicitação do usuário; não aparece nos formulários consultados.
+
+O termo original de autorização de uso de dados para processo seletivo está registrado no inventário. Como não existe envio de dados nesta versão, a confirmação da revisão explica o comportamento local e não simula um consentimento de inscrição. Ao conectar o backend, deve-se exibir o termo correspondente à finalidade real e a política de privacidade da instituição.
+
+## Pendências concretas
+
+1. Definir condições do programa consolidado: público, duração, horário, investimento e seleção.
+2. Conectar destino real das inscrições; repetir validações no servidor e configurar armazenamento privado de anexos, controles de acesso e retenção.
+3. Atualizar os três endereços institucionais para refletir apenas jovens e Business School; redirecionar o endereço antigo quando essa migração for autorizada.
+4. Publicar e validar microfone em HTTPS, incluindo Safari/iOS e Android reais.
